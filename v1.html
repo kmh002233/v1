@@ -1,68 +1,138 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8"> <!-- 문서 인코딩 설정 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 반응형 웹 설정 -->
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>랜덤 명언 생성기</title>
     <style>
-        body { 
-            font-family: 'Nanum Pen Script', cursive; /* 글꼴 설정 */
-            text-align: center; /* 텍스트 중앙 정렬 */
-            padding: 50px; /* 바깥쪽 여백 설정 */
-            background-color: #000000; /* 배경 색 설정 */
-	    color: white;
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: black;
+            color: white;
+            transition: background-color 0.3s, color 0.3s;
         }
-        #quote-box { 
-            font-size: 48px; /* 글자 크기 설정 */
-            font-weight: bold; /* 글자 굵기 설정 */
-            margin: 20px 0; /* 바깥쪽 여백 설정 */
-            color: white; /* 글씨 색 설정 */
+        #quote-container {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
         }
-
-	.author {
-	    display: block;
-	    text-align: right;
-	    font-size: 24px;
-	    font-weight: normal;
-	    margin-top: 10px;
-	}
-
-        button { 
-            padding: 10px 20px; /* 버튼 내부 여백 설정 */
-            font-size: 15px; /* 버튼 글씨 크기 설정 */
-            cursor: pointer; /* 마우스 커서 변경 (클릭 가능 표시) */
-	    background-color: white;
-	    color: black;
-	    border: none; /*테두리 제거*/
- 	    border-radius: 10px; /*모서리를 둥글게*/
-	    transition: 0.3s; /*부드러운 효과*/
+        .hidden {
+            display: none;
         }
-	button:hover {
-	    background-color: gray; /*마우스 올리면 색 변경*/
-	}
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: white;
+            color: black;
+            border: 1px solid black;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        button:hover {
+            background-color: gray;
+            color: white;
+        }
+        #theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px;
+            background-color: white;
+            color: black;
+            border: 1px solid black;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h1>오늘의 명언</h1> <!-- 제목 표시 -->
-    <div id="quote-box">"명언이 여기에 표시됩니다."</div> <!-- 명언이 표시될 영역 -->
-    <button onclick="generateQuote()">새로운 명언 보기</button> <!-- 버튼 클릭 시 명언 변경 -->
+
+    <h1>명언 생성기</h1>
+    <div id="button-container">
+        <button onclick="selectCategory('강인함과 극복')">강인함과 극복</button>
+        <button onclick="selectCategory('자기 성장과 자아 발견')">자기 성장과 자아 발견</button>
+        <button onclick="selectCategory('인간관계와 타인에 대한 이해')">인간관계와 타인에 대한 이해</button>
+        <button onclick="selectCategory('현실과 사회에 대한 통찰')">현실과 사회에 대한 통찰</button>
+        <button onclick="selectCategory('인생과 시간의 흐름')">인생과 시간의 흐름</button>
+        <button onclick="selectCategory('반성과 내면의 평온')">반성과 내면의 평온</button>
+        <button onclick="selectCategory('전체 랜덤')">전체 랜덤</button>
+    </div>
+
+    <div id="action-buttons" class="hidden">
+        <button onclick="showQuote()">오늘의 문구</button>
+        <button onclick="showCategories()">초기 화면</button>
+    </div>
+
+    <div id="quote-container"></div>
+
+    <!-- 테마 변경 버튼 -->
+    <button id="theme-toggle" onclick="toggleTheme()">테마 변경</button>
 
     <script>
-        let quotes = [];
-	
-	fetch('quotes.json')
-		.then(response => response.json())
-		.then(data => {quotes = data;});
+        let quotesData = {};
+        let selectedCategory = "";
 
-        // 랜덤 명언 생성 함수
-        function generateQuote() {
-	    if (quotes.legth === 0) return;
-            const randomIndex = Math.floor(Math.random() * quotes.length); // 0부터 배열 길이 사이의 랜덤 인덱스 생성
-	    const quote = quotes[randomIndex];
+        fetch('quotes.json')
+            .then(response => response.json())
+            .then(data => {
+                quotesData = data;
+            })
+            .catch(error => console.error("JSON 파일을 불러오는 중 오류 발생:", error));
 
-            document.getElementById("quote-box").innerHTML = `"${quote.text}"<br><span class="author">- ${quote.author}</span>`; // 선택된 명언을 표시
+        function selectCategory(category) {
+            selectedCategory = category;
+            document.getElementById("button-container").classList.add("hidden");
+            document.getElementById("action-buttons").classList.remove("hidden");
+            document.getElementById("quote-container").innerHTML = "";
+        }
+
+        function showQuote() {
+            let quoteText = "";
+            if (selectedCategory === "전체 랜덤") {
+                let allCategories = Object.keys(quotesData);
+                let randomCategory = allCategories[Math.floor(Math.random() * allCategories.length)];
+                let quotes = quotesData[randomCategory];
+                let randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                quoteText = `"${randomQuote.text}" - ${randomQuote.author}`;
+            } else {
+                let quotes = quotesData[selectedCategory];
+                let randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                quoteText = `"${randomQuote.text}" - ${randomQuote.author}`;
+            }
+            document.getElementById("quote-container").innerHTML = quoteText;
+        }
+
+        function showCategories() {
+            document.getElementById("button-container").classList.remove("hidden");
+            document.getElementById("action-buttons").classList.add("hidden");
+            document.getElementById("quote-container").innerHTML = "";
+        }
+
+        // 테마 변경 함수
+        function toggleTheme() {
+            let body = document.body;
+            let buttons = document.querySelectorAll("button");
+            if (body.style.backgroundColor === "black") {
+                body.style.backgroundColor = "white";
+                body.style.color = "black";
+                buttons.forEach(button => {
+                    button.style.backgroundColor = "black";
+                    button.style.color = "white";
+                    button.style.border = "1px solid white";
+                });
+            } else {
+                body.style.backgroundColor = "black";
+                body.style.color = "white";
+                buttons.forEach(button => {
+                    button.style.backgroundColor = "white";
+                    button.style.color = "black";
+                    button.style.border = "1px solid black";
+                });
+            }
         }
     </script>
+
 </body>
 </html>
